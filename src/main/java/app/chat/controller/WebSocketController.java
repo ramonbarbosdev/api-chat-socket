@@ -17,4 +17,6 @@ public class WebSocketController {
 
         return new ChatMessage(message.getMessage(), message.getUser());
     }
+    
+ 
 }
