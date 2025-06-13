@@ -8,7 +8,7 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
-COPY --from=build /app/target/syncdb-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/chat-0.0.1-SNAPSHOT app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
