@@ -6,6 +6,7 @@ import java.security.Principal;
 import java.security.SignatureException;
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,9 @@ public class JWTTokenAutenticacaoService {
     private static final long EXPIRATION_TIME = 172800000; // 2 dias
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HEADER_STRING = "Authorization";
+
+    @Value("${server.servlet.context-path}")
+    private String CHAVE_COOKIE;
 
     private static final String SECRET_KEY_BASE64 = "HaqrDaAaICtFZNXjm5Q3dPNgAZX+bnf6efMy2HuIO1Iq928rcmtTltoAFhsROHxNwtcHjB6FWudgjqxBMXAP8w==";
 
@@ -142,7 +146,7 @@ public class JWTTokenAutenticacaoService {
         Cookie cookie = new Cookie("access_token", jwt);
         cookie.setHttpOnly(true);
         cookie.setSecure(false); 
-        cookie.setPath("/syncdb");
+        cookie.setPath(CHAVE_COOKIE);
         cookie.setMaxAge(3600); // Expiração de 1 hora
         
         response.addCookie(cookie);  

@@ -41,7 +41,7 @@ public class WebConfigSecurity {
                     .requestMatchers(HttpMethod.POST, "/auth/register").permitAll() 
             		.requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
             		.requestMatchers(HttpMethod.OPTIONS,"/index").permitAll()
-            		.requestMatchers(HttpMethod.OPTIONS,"/ws/**").permitAll()
+            		.requestMatchers(HttpMethod.OPTIONS,"/chat-socket/**").permitAll()
                     .requestMatchers(
                         new AntPathRequestMatcher("/swagger-ui/**"),
                         new AntPathRequestMatcher("/v3/api-docs/**"),

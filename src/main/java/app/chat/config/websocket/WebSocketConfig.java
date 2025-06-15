@@ -1,4 +1,4 @@
-package app.chat.config;
+package app.chat.config.websocket;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -10,6 +10,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
 {
+     private final AuthHandshakeInterceptor authHandshakeInterceptor;
+
+    public WebSocketConfig(AuthHandshakeInterceptor authHandshakeInterceptor) {
+        this.authHandshakeInterceptor = authHandshakeInterceptor;
+    }
+
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry)
@@ -21,10 +27,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry)
     {
+         System.out.println("Registrando endpoint WebSocket");
          registry.addEndpoint("/chat-socket")
-               .setAllowedOrigins("http://localhost:4200")
-            .withSockJS();
-    }
+                .addInterceptors(authHandshakeInterceptor)
+                .setAllowedOrigins("http://localhost:4200")
+                .withSockJS();
+        }
     
     
 }
