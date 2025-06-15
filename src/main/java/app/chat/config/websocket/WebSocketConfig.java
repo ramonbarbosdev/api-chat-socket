@@ -27,7 +27,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry)
     {
-         System.out.println("Registrando endpoint WebSocket");
          registry.addEndpoint("/chat-socket")
                 .addInterceptors(authHandshakeInterceptor)
                 .setAllowedOrigins("http://localhost:4200")

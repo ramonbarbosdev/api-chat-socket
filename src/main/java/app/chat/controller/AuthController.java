@@ -47,16 +47,24 @@ public class AuthController {
     @PostMapping(value = "/login", produces = "application/json")
     public ResponseEntity login(@RequestBody AuthLoginDTO obj, HttpServletResponse response) 
     {
-         String login =  obj.getLogin(); 
+        String login =  obj.getLogin(); 
         String senha = obj.getSenha();
         
         var usernamePassword = new UsernamePasswordAuthenticationToken(login, senha);
         var auth =  this.authenticationManager.authenticate(usernamePassword);
-
+        Usuario objeto = usuarioRepository.findUserByLogin(login);
         try
         {
             String token = jwtTokenAutenticacaoService.addAuthentication(response, auth.getName());
-            return ResponseEntity.ok().body(Map.of("Authorization", token));
+            
+            return ResponseEntity
+                .ok()
+                .body(Map.of(
+                "Authorization", token,
+                "id_usuario", objeto.getId(),
+                "login", objeto.getLogin(),
+                "nm_usuario", objeto.getNome() != null ? objeto.getNome() : ""
+                ));
         }
         catch (Exception e)
         {
