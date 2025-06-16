@@ -8,11 +8,11 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class ChatMessageDTO {
+public class RoomDTO {
 
     
-    Long id_usuario;
-    String message;
     Long id_room;
-    LocalDateTime timestamp;
+    String nm_room;
+    String ds_room;
+    Long id_usuario;
 }

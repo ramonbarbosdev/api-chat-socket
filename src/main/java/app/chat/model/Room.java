@@ -1,7 +1,5 @@
 package app.chat.model;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,19 +7,20 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
-public class ChatMessage {
+public class Room {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id_chatmessage;
-
-    @ManyToOne()
-    @JoinColumn(name = "id_room", insertable = false, updatable = false)
-    private Room room;
-
-    @Column(name = "id_room")
     private Long id_room;
+
+    @NotBlank(message = "O nome é obrigatorio!")
+	@Column(unique = true, nullable = false)
+    private String nm_room;
+
+    private String ds_room;
 
     @ManyToOne()
     @JoinColumn(name = "id_usuario", insertable = false, updatable = false)
@@ -30,21 +29,11 @@ public class ChatMessage {
     @Column(name = "id_usuario")
 	private Long id_usuario;
 
-    private String message;
-
-    private LocalDateTime timestamp;
-
-    public Long getId_chatmessage() {
-        return id_chatmessage;
+    public String getDs_room() {
+        return ds_room;
     }
-    public void setId_chatmessage(Long id_chatmessage) {
-        this.id_chatmessage = id_chatmessage;
-    }
-    public String getMessage() {
-        return message;
-    }
-    public void setMessage(String message) {
-        this.message = message;
+    public void setDs_room(String ds_room) {
+        this.ds_room = ds_room;
     }
     public Long getId_room() {
         return id_room;
@@ -52,16 +41,18 @@ public class ChatMessage {
     public void setId_room(Long id_room) {
         this.id_room = id_room;
     }
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
     public Long getId_usuario() {
         return id_usuario;
     }
     public void setId_usuario(Long id_usuario) {
         this.id_usuario = id_usuario;
     }
+    public String getNm_room() {
+        return nm_room;
+    }
+    public void setNm_room(String nm_room) {
+        this.nm_room = nm_room;
+    }
+  
+
 }
