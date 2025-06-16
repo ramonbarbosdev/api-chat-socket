@@ -1,5 +1,9 @@
 package app.chat.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
@@ -28,6 +33,18 @@ public class Room {
 
     @Column(name = "id_usuario")
 	private Long id_usuario;
+
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RoomUsuario> compartilhamentos = new ArrayList<>();
+
+    public List<RoomUsuario> getCompartilhamentos() {
+        return compartilhamentos;
+    }
+
+    public void setCompartilhamentos(List<RoomUsuario> compartilhamentos) {
+        this.compartilhamentos = compartilhamentos;
+}
 
     public String getDs_room() {
         return ds_room;
