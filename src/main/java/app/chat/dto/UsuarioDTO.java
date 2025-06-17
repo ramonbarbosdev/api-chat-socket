@@ -9,6 +9,7 @@ import app.chat.model.Usuario;
 
 public class UsuarioDTO  implements Serializable{
 
+	private Long userId;
 	private String userLogin;
 	private String userNome;
 	private String userSenha;   
@@ -16,11 +17,21 @@ public class UsuarioDTO  implements Serializable{
 
 	public UsuarioDTO(Usuario usuario) 
 	{
+		this.userId = usuario.getId();
 		this.userLogin = usuario.getLogin();
 		this.userNome = usuario.getNome();
 		this.userSenha = usuario.getSenha();
 
 	}
+
+	public Long getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Long userId) {
+		this.userId = userId;
+	}
+
 
 	public String getUserLogin() {
 		return userLogin;
