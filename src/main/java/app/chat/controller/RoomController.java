@@ -66,7 +66,7 @@ public class RoomController {
        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
-    @PostMapping("/{id_room}/compartilhar/{idUsuario}")
+    @GetMapping("/{id_room}/compartilhar/{id_usuario}")
     public ResponseEntity<?> compartilharSala(@PathVariable Long id_room, @PathVariable Long id_usuario)
     {
         Optional<Room> roomOpt = repository.findById(id_room);
