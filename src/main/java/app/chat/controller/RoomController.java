@@ -81,8 +81,23 @@ public class RoomController {
        
         Boolean fl_responsavel = repository.findVerificarResponsavelSala(id_usuario, id_room);
 
-       return new ResponseEntity<>(Map.of("fl_responsavel",fl_responsavel), HttpStatus.OK);
+        if(fl_responsavel != null)
+        {
+            return new ResponseEntity<>(Map.of("fl_responsavel",fl_responsavel), HttpStatus.OK);
+        }
+
+         return new ResponseEntity<>(Map.of("fl_responsavel",false), HttpStatus.OK); 
     }
+
+    @DeleteMapping(value = "/remover-sala/{id_usuario}/{id_room}")
+    public ResponseEntity<?> removerUsuarioSala( @PathVariable Long id_usuario,@PathVariable Long id_room) {
+       
+        roomUsuarioRepository.deleteByIdRoomIdUsuario(id_usuario, id_room);
+
+       return new ResponseEntity<>(Map.of("message","Usuario Removido"), HttpStatus.OK);
+    }
+
+
 
     @Operation(summary = "Criação", description = "")
     @ApiResponses(value = {

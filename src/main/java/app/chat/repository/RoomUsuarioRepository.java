@@ -19,8 +19,17 @@ public interface RoomUsuarioRepository extends CrudRepository<RoomUsuario, Long>
     List<RoomUsuario> findByUsuarioId(Long id_usuario);
 
     @Modifying
-    @Query("DELETE FROM RoomUsuario i WHERE  i.room.id_room = :id_room")
+    @Query("DELETE FROM RoomUsuario i ")
     void deleteByIdRoomUsuario(@Param("id_room") Long id_room);
+
+    @Modifying
+    @Query("""
+         DELETE FROM RoomUsuario i 
+             WHERE  i.room.id_room = :id_room
+             and  i.usuario.id = :id_usuario
+            
+        """)
+    void deleteByIdRoomIdUsuario(@Param("id_usuario") Long id_usuario, @Param("id_room") Long id_room);
 
 
 }
