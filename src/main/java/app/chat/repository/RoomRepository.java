@@ -20,12 +20,22 @@ public interface  RoomRepository extends CrudRepository<Room, Long>  {
 
 
    @Query("""
-    SELECT r 
-    FROM Room r 
-    JOIN RoomUsuario ru ON ru.id_room = r.id_room 
-    WHERE ru.id_usuario = :idUsuario
+    SELECT ru.room
+    FROM RoomUsuario ru
+        WHERE ru.usuario.id = :id_usuario
     """)
-    List<Room> findSalasCompartilhadasComUsuario(@Param("idUsuario") Long idUsuario);
+    List<Room> findSalasCompartilhadasComUsuario(@Param("id_usuario") Long idUsuario);
+	
+	
+
+//    @Query("""
+//     select cast(1 as boolean) as fl_existe 
+//     from Room r 
+//     join RoomUsuario ru on r.id_room  = ru.id_room
+//     where ru.id_room = :id_room 
+//     and ru.id_usuario = :id_usuario
+//     """)
+//     List<Room> findVerificarUsuarioSala(@Param("id_room") Long id_room, @Param("id_usuario") Long id_usuario);
 	
 	
 }

@@ -1,8 +1,11 @@
 package app.chat.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import app.chat.model.Usuario;
@@ -20,5 +23,18 @@ public interface  UsuarioRepository extends CrudRepository<Usuario, Long>  {
 	@Modifying
 	@Query(nativeQuery = true, value = "update usuario set token = ?1 where login = ?2")
 	void atualizarTokenUser(String token, String login);
+
+	@Query("""
+		SELECT u
+		FROM Usuario u
+		WHERE u.id <> :id_usuario
+		AND u.id NOT IN (
+			SELECT ru.usuario.id
+			FROM RoomUsuario ru
+			WHERE ru.room.id_room = :id_room
+		)
+	""")
+	List<Usuario> findUsuarioDisponivelConvite(@Param("id_room") Long id_room, @Param("id_usuario") Long id_usuario);
+
 	
 }

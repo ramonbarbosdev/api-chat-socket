@@ -46,6 +46,7 @@ public class RoomController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    
     @Operation(summary = "Consulta", description = "")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Requisição feita com sucesso"),
@@ -66,24 +67,15 @@ public class RoomController {
        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
-    @GetMapping("/{id_room}/compartilhar/{id_usuario}")
-    public ResponseEntity<?> compartilharSala(@PathVariable Long id_room, @PathVariable Long id_usuario)
-    {
-        Optional<Room> roomOpt = repository.findById(id_room);
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id_usuario);
+    @GetMapping("/compartilhamento/{id_usuario}")
+    public ResponseEntity<?> obterUsuarioParaCompartilhamento( @PathVariable Long id_usuario) {
+       
+        List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
 
-        if (roomOpt.isEmpty() || usuarioOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        RoomUsuario compartilhamento = new RoomUsuario();
-        compartilhamento.setId_room(id_room);
-        compartilhamento.setId_usuario(id_usuario);
-
-        roomUsuarioRepository.save(compartilhamento);
-
-        return ResponseEntity.ok().build();
+       return new ResponseEntity<>(list, HttpStatus.OK);
     }
+
+
 
     @Operation(summary = "Criação", description = "")
     @ApiResponses(value = {
@@ -93,13 +85,13 @@ public class RoomController {
     public ResponseEntity<?> cadastro(@RequestBody Room objeto) 
     {
 
-       
+        Optional<Usuario> usuario = usuarioRepository.findById(objeto.getId_usuario());
 
         Room objetoSalvo = repository.save(objeto);
 
         RoomUsuario salaAssociada = new RoomUsuario();
-        salaAssociada.setId_room(objetoSalvo.getId_room());
-        salaAssociada.setId_usuario(objetoSalvo.getId_usuario());
+        salaAssociada.setRoom(objetoSalvo);
+        salaAssociada.setUsuario(usuario.get());
         roomUsuarioRepository.save(salaAssociada);
     
         return new ResponseEntity<>(objetoSalvo, HttpStatus.CREATED);

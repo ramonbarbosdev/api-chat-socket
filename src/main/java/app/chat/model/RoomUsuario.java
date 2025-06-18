@@ -11,19 +11,13 @@ public class RoomUsuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_roomusuario;
 
-    @ManyToOne()
-    @JoinColumn(name = "id_room", insertable = false, updatable = false)
-    private Room room;
-
-    @Column(name = "id_room")
-    private Long id_room;
-
-    @ManyToOne()
-    @JoinColumn(name = "id_usuario", insertable = false, updatable = false)
+   @ManyToOne
+    @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
-    @Column(name = "id_usuario")
-    private Long id_usuario;
+    @ManyToOne
+    @JoinColumn(name = "id_room")
+    private Room room;
 
     // Getters e Setters
     public Long getId_roomusuario() {
@@ -34,19 +28,19 @@ public class RoomUsuario {
         this.id_roomusuario = id_roomusuario;
     }
 
-    public Long getId_room() {
-        return id_room;
+    public Room getRoom() {
+        return room;
+    }
+    
+    public void setRoom(Room room) {
+        this.room = room;
     }
 
-    public void setId_room(Long id_room) {
-        this.id_room = id_room;
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    public Long getId_usuario() {
-        return id_usuario;
-    }
-
-    public void setId_usuario(Long id_usuario) {
-        this.id_usuario = id_usuario;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }
