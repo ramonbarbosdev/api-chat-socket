@@ -1,6 +1,7 @@
 package app.chat.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,7 @@ public class RoomController {
         return new ResponseEntity<>(entidades, HttpStatus.OK);
     }
 
-    @GetMapping("/salas-permitidas/{id_usuario}")
+    @GetMapping(value ="/salas-permitidas/{id_usuario}",  produces = "application/json")
     public ResponseEntity<?> obterSalasPermitidas( @PathVariable Long id_usuario) {
        
         List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
@@ -67,15 +68,21 @@ public class RoomController {
        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
-    @GetMapping("/compartilhamento/{id_usuario}")
-    public ResponseEntity<?> obterUsuarioParaCompartilhamento( @PathVariable Long id_usuario) {
+    // @GetMapping("/compartilhamento/{id_usuario}")
+    // public ResponseEntity<?> obterUsuarioParaCompartilhamento( @PathVariable Long id_usuario) {
        
-        List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
+    //     List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
 
-       return new ResponseEntity<>(list, HttpStatus.OK);
+    //    return new ResponseEntity<>(list, HttpStatus.OK);
+    // }
+
+    @GetMapping("/varificar-responsavel/{id_usuario}/{id_room}")
+    public ResponseEntity<?> verificarResponsavelSala( @PathVariable Long id_usuario,@PathVariable Long id_room) {
+       
+        Boolean fl_responsavel = repository.findVerificarResponsavelSala(id_usuario, id_room);
+
+       return new ResponseEntity<>(Map.of("fl_responsavel",fl_responsavel), HttpStatus.OK);
     }
-
-
 
     @Operation(summary = "Criação", description = "")
     @ApiResponses(value = {

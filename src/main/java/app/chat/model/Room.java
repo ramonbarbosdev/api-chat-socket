@@ -22,7 +22,7 @@ public class Room {
     private Long id_room;
 
     @NotBlank(message = "O nome é obrigatorio!")
-	@Column(unique = true, nullable = false)
+	@Column(unique = false, nullable = false)
     private String nm_room;
 
     private String ds_room;

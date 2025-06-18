@@ -1,6 +1,8 @@
 package app.chat.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -11,12 +13,14 @@ public class RoomUsuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_roomusuario;
 
-   @ManyToOne
+    @ManyToOne
     @JoinColumn(name = "id_usuario")
+    @JsonIgnore
     private Usuario usuario;
 
     @ManyToOne
     @JoinColumn(name = "id_room")
+    @JsonIgnore
     private Room room;
 
     // Getters e Setters
