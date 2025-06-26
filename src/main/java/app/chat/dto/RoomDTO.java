@@ -15,4 +15,14 @@ public class RoomDTO {
     String nm_room;
     String ds_room;
     Long id_usuario;
+    String nm_usuario;
+
+
+    public RoomDTO() {
+        this.id_room = null;
+        this.nm_room = null;
+        this.ds_room = null;
+        this.id_usuario = null;
+        this.nm_usuario = null;
+    }
 }

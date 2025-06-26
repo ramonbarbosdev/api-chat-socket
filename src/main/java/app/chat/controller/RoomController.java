@@ -30,11 +30,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 
-@RestController 
+@RestController
 @RequestMapping(value = "/room")
 @Tag(name = "Salas")
 public class RoomController {
-    
+
     @Autowired
     private RoomRepository repository;
 
@@ -47,65 +47,84 @@ public class RoomController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    
     @Operation(summary = "Consulta", description = "")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Requisição feita com sucesso"),
+            @ApiResponse(responseCode = "200", description = "Requisição feita com sucesso"),
     })
     @GetMapping(value = "/", produces = "application/json")
-    public ResponseEntity<List<?>> obterTodos( ) 
-    {
+    public ResponseEntity<List<?>> obterTodos() {
         List<Room> entidades = (List<Room>) repository.findAll();
 
         return new ResponseEntity<>(entidades, HttpStatus.OK);
     }
 
-    @GetMapping(value ="/salas-permitidas/{id_usuario}",  produces = "application/json")
-    public ResponseEntity<?> obterSalasPermitidas( @PathVariable Long id_usuario) {
-       
+    @Operation(summary = "Consulta por ID", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Requisição feita com sucesso"),
+    })
+    @GetMapping(value = "/{id}", produces = "application/json")
+    public ResponseEntity<?> obterTodosId(@PathVariable Long id) {
+        Optional<Room> objeto = repository.findById(id);
+        if (objeto.isPresent()) {
+
+            Optional<Usuario> usuario = usuarioRepository.findById(objeto.get().getId_usuario());
+
+            RoomDTO roomDTO = new RoomDTO();
+            roomDTO.setId_room(id);
+            roomDTO.setNm_room(objeto.get().getNm_room());
+            roomDTO.setDs_room(objeto.get().getDs_room());
+            roomDTO.setId_usuario(objeto.get().getId_usuario());
+            roomDTO.setNm_usuario(usuario.get().getNome());
+
+            return new ResponseEntity<>(roomDTO, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping(value = "/salas-permitidas/{id_usuario}", produces = "application/json")
+    public ResponseEntity<?> obterSalasPermitidas(@PathVariable Long id_usuario) {
+
         List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
 
-       return new ResponseEntity<>(list, HttpStatus.OK);
+        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
     // @GetMapping("/compartilhamento/{id_usuario}")
-    // public ResponseEntity<?> obterUsuarioParaCompartilhamento( @PathVariable Long id_usuario) {
-       
-    //     List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
+    // public ResponseEntity<?> obterUsuarioParaCompartilhamento( @PathVariable Long
+    // id_usuario) {
 
-    //    return new ResponseEntity<>(list, HttpStatus.OK);
+    // List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
+
+    // return new ResponseEntity<>(list, HttpStatus.OK);
     // }
 
     @GetMapping("/varificar-responsavel/{id_usuario}/{id_room}")
-    public ResponseEntity<?> verificarResponsavelSala( @PathVariable Long id_usuario,@PathVariable Long id_room) {
-       
+    public ResponseEntity<?> verificarResponsavelSala(@PathVariable Long id_usuario, @PathVariable Long id_room) {
+
         Boolean fl_responsavel = repository.findVerificarResponsavelSala(id_usuario, id_room);
 
-        if(fl_responsavel != null)
-        {
-            return new ResponseEntity<>(Map.of("fl_responsavel",fl_responsavel), HttpStatus.OK);
+        if (fl_responsavel != null) {
+            return new ResponseEntity<>(Map.of("fl_responsavel", fl_responsavel), HttpStatus.OK);
         }
 
-         return new ResponseEntity<>(Map.of("fl_responsavel",false), HttpStatus.OK); 
+        return new ResponseEntity<>(Map.of("fl_responsavel", false), HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/remover-sala/{id_usuario}/{id_room}")
-    public ResponseEntity<?> removerUsuarioSala( @PathVariable Long id_usuario,@PathVariable Long id_room) {
-       
+    public ResponseEntity<?> removerUsuarioSala(@PathVariable Long id_usuario, @PathVariable Long id_room) {
+
         roomUsuarioRepository.deleteByIdRoomIdUsuario(id_usuario, id_room);
 
-       return new ResponseEntity<>(Map.of("message","Usuario Removido"), HttpStatus.OK);
+        return new ResponseEntity<>(Map.of("message", "Usuario Removido"), HttpStatus.OK);
     }
-
-
 
     @Operation(summary = "Criação", description = "")
     @ApiResponses(value = {
-        // @ApiResponse(responseCode = "401", description = "Não autorizado")
+    // @ApiResponse(responseCode = "401", description = "Não autorizado")
     })
     @PostMapping(value = "/", produces = "application/json")
-    public ResponseEntity<?> cadastro(@RequestBody Room objeto) 
-    {
+    public ResponseEntity<?> cadastro(@RequestBody Room objeto) {
 
         Optional<Usuario> usuario = usuarioRepository.findById(objeto.getId_usuario());
 
@@ -115,22 +134,21 @@ public class RoomController {
         salaAssociada.setRoom(objetoSalvo);
         salaAssociada.setUsuario(usuario.get());
         roomUsuarioRepository.save(salaAssociada);
-    
+
         return new ResponseEntity<>(objetoSalvo, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Exclusão", description = "")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Tudo certo")
+            @ApiResponse(responseCode = "201", description = "Tudo certo")
     })
-    @DeleteMapping(value = "/{id}", produces = "application/text" )
-	public ResponseEntity<?> delete (@PathVariable("id") Long id) throws Exception
-	{   
+    @DeleteMapping(value = "/{id}", produces = "application/text")
+    public ResponseEntity<?> delete(@PathVariable("id") Long id) throws Exception {
         chatMessageRepository.deleteByIdChatMessage(id);
         roomUsuarioRepository.deleteByIdRoomUsuario(id);
-        repository.deleteById( id);
-			
+        repository.deleteById(id);
+
         return ResponseEntity.status(HttpStatus.OK).body("{\"message\": \"Registro deletado!\"}");
 
-	}
+    }
 }
