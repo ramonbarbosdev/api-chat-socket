@@ -143,13 +143,15 @@ public class JWTTokenAutenticacaoService {
     }
 
     private void inserirJwtCookie(String jwt, HttpServletResponse response) {
-        Cookie cookie = new Cookie("access_token", jwt);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false); 
-        cookie.setPath(CHAVE_COOKIE);
-        cookie.setMaxAge(3600); // Expiração de 1 hora
-        
-        response.addCookie(cookie);  
+         StringBuilder cookieValue = new StringBuilder();
+        cookieValue.append("access_token=").append(jwt)
+        .append("; Path=").append(CHAVE_COOKIE)
+        .append("; HttpOnly")
+        .append("; Secure") // ⚠️ obrigatório em produção (HTTPS)
+        .append("; SameSite=None") // ⚠️ obrigatório para cross-origin
+        .append("; Max-Age=3600"); // 1 hora
+
+    response.addHeader("Set-Cookie", cookieValue.toString());
     }
 
     private String obterTokenCookie(HttpServletRequest request)
