@@ -75,7 +75,7 @@ public class WebConfigSecurity {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://api-chat-socket.onrender.com")); // Libera o Angular
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://api-chat-socket.onrender.com","https://chat-socket-jca8.onrender.com")); // Libera o Angular
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true); 

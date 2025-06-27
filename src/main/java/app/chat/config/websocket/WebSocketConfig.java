@@ -29,7 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer
     {
          registry.addEndpoint("/chat-socket")
                 .addInterceptors(authHandshakeInterceptor)
-                .setAllowedOrigins("http://localhost:4200")
+                .setAllowedOrigins("http://localhost:4200", "https://chat-socket-jca8.onrender.com")
                 .withSockJS();
         }
     
