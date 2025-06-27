@@ -139,6 +139,8 @@ public class RoomController {
         salaAssociada.setUsuario(usuario.get());
         roomUsuarioRepository.save(salaAssociada);
 
+        messagingTemplate.convertAndSend("/topic/salas", "update");
+
         return new ResponseEntity<>(objetoSalvo, HttpStatus.CREATED);
     }
 

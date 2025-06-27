@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +27,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Salas")
 public class ConviteController {
     
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
-     @Autowired
+    @Autowired
     private RoomRepository repository;
 
     @Autowired
@@ -67,6 +70,9 @@ public class ConviteController {
         compartilhamento.setUsuario(usuarioOpt.get());
 
         roomUsuarioRepository.save(compartilhamento);
+
+        messagingTemplate.convertAndSend("/topic/salas", "update");
+
 
         return ResponseEntity.ok().build();
     }
