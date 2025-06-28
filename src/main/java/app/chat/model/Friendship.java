@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.chat.enums.AmizadeStatus;
+import app.chat.enums.FriendshipStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,13 +28,15 @@ public class Friendship {
     private Long id_friendship;
 
     @ManyToOne
+    @JoinColumn(name = "id_requester")
     private Usuario id_requester;
 
     @ManyToOne
+    @JoinColumn(name = "id_receiver")
     private Usuario id_receiver;
 
     @Enumerated(EnumType.STRING)
-    private AmizadeStatus tp_status;
+    private FriendshipStatus tp_status;
 
     private LocalDateTime dt_createdat = LocalDateTime.now();
 
@@ -58,10 +60,10 @@ public class Friendship {
        this.id_receiver = id_receiver;
    }
 
-    public AmizadeStatus getTp_status() {
+    public FriendshipStatus getTp_status() {
         return tp_status;
     }
-    public void setTp_status(AmizadeStatus tp_status) {
+    public void setTp_status(FriendshipStatus tp_status) {
         this.tp_status = tp_status;
     }
     public LocalDateTime getDt_createdat() {

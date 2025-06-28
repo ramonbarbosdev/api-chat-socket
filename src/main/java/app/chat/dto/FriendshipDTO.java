@@ -3,7 +3,8 @@
 
 import java.time.LocalDateTime;
 
-import app.chat.enums.AmizadeStatus;
+import app.chat.enums.FriendshipStatus;
+import app.chat.model.Friendship;
 import app.chat.model.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,16 +15,16 @@ public class FriendshipDTO {
 
     
     Long id_friendship;
-    Usuario id_requester;
-    Usuario id_receiver;
-    AmizadeStatus tp_status;
+    UsuarioPublicDTO id_requester;
+    UsuarioPublicDTO id_receiver;
+    FriendshipStatus tp_status;
     LocalDateTime dt_createdat;
 
-    public FriendshipDTO() {
-        this.id_friendship = null;
-        this.id_requester = null;
-        this.id_receiver = null;
-        this.tp_status = null;
-        this.dt_createdat = null;
+    public FriendshipDTO(Friendship objeto) {
+        this.id_friendship = objeto.getId_friendship();
+        this.id_requester =  new UsuarioPublicDTO(objeto.getId_requester());
+        this.id_receiver = new UsuarioPublicDTO(objeto.getId_receiver());
+        this.tp_status = objeto.getTp_status();
+        this.dt_createdat = objeto.getDt_createdat();
     }
 }

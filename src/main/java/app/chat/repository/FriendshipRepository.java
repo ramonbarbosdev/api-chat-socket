@@ -17,9 +17,20 @@ import jakarta.transaction.Transactional;
 
 @Repository
 @Transactional
-public interface  FriendshipRepository extends CrudRepository<Friendship, Long>  {
+public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
 
+    @Query("""
+                SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END
+                FROM Friendship f
+                WHERE (f.id_requester = :u1 AND f.id_receiver = :u2)
+                   OR (f.id_requester = :u2 AND f.id_receiver = :u1)
+            """)
+    boolean existeRelacionamento(@Param("u1") Usuario u1, @Param("u2") Usuario u2);
 
-   
-	
+       @Query("""
+                SELECT f  FROM Friendship f
+                WHERE f.id_receiver.id = :id_receiver
+                AND f.tp_status = 'PENDENTE'
+            """)
+    List<Friendship> findPendente(Long id_receiver);
 }
