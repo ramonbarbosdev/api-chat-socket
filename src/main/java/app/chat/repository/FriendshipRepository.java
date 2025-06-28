@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import app.chat.dto.RoomDTO;
+import app.chat.enums.FriendshipStatus;
 import app.chat.model.Friendship;
 import app.chat.model.Room;
 import app.chat.model.RoomUsuario;
@@ -30,7 +31,7 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
     @Query("""
                 SELECT f  FROM Friendship f
                 WHERE f.id_receiver.id = :id_receiver
-                AND f.tp_status = 'PENDENTE'
+                AND f.tp_status in ('PENDENTE', 'RECUSADO')
             """)
     List<Friendship> findPendente(Long id_receiver);
 
@@ -40,4 +41,15 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
                 AND f.tp_status = 'ACEITO'
             """)
     List<Friendship> findAceito(Long id_receiver);
+
+    @Modifying
+    @Transactional
+    @Query(nativeQuery = true, value = """
+                UPDATE friendship
+                SET tp_status = ?2
+                WHERE id_friendship = ?1
+                  AND tp_status = 'PENDENTE'
+            """)
+    void atualizarStatus(Long id_friendship, String tp_status);
+
 }

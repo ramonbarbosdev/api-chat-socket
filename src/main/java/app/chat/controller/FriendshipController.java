@@ -23,6 +23,7 @@ import app.chat.dto.FriendshipDTO;
 import app.chat.dto.RoomDTO;
 import app.chat.dto.UsuarioDTO;
 import app.chat.dto.authDTO.AuthLoginDTO;
+import app.chat.enums.FriendshipStatus;
 import app.chat.model.Friendship;
 import app.chat.model.Room;
 import app.chat.model.RoomUsuario;
@@ -64,13 +65,25 @@ public class FriendshipController {
     }
 
     @PostMapping(value = "/aceitar/{id_friendship}", produces = "application/json")
-    public ResponseEntity<?> aceitarConvite(@RequestBody Long id_friendship) {
-        return null;
+    public ResponseEntity<?> aceitarConvite(@PathVariable Long id_friendship)
+    {
+        repository.atualizarStatus(id_friendship,  FriendshipStatus.ACEITO.name());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Solicitação aceita.");
+
     }
 
-    @PostMapping(value = "/rejeitar/{id_friendship}", produces = "application/json")
-    public ResponseEntity<?> rejeitarConvite(@RequestBody Long id_friendship) {
-        return null;
+    @PostMapping(value = "/recusar/{id_friendship}", produces = "application/json")
+    public ResponseEntity<?> rejeitarConvite(@PathVariable Long id_friendship)
+    {
+
+        Optional<Friendship> jaExiste = repository.findById(id_friendship);
+
+        if(jaExiste.isEmpty()) throw new IllegalStateException("Não existe solicitação pendente");
+
+        repository.atualizarStatus(id_friendship,  FriendshipStatus.RECUSADO.name() );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Solicitação recusada.");
     }
 
     //Amigos online - CONSTRUIR
