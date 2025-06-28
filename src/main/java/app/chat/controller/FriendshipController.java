@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import app.chat.dto.FriendshipDTO;
 import app.chat.dto.RoomDTO;
 import app.chat.dto.UsuarioDTO;
+import app.chat.dto.UsuarioPublicDTO;
 import app.chat.dto.authDTO.AuthLoginDTO;
 import app.chat.enums.FriendshipStatus;
 import app.chat.model.Friendship;
@@ -51,6 +52,9 @@ public class FriendshipController {
     private FriendshipRepository repository;
 
     @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
@@ -64,23 +68,33 @@ public class FriendshipController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Convite enviado.");
     }
 
-    @PostMapping(value = "/aceitar/{id_friendship}", produces = "application/json")
-    public ResponseEntity<?> aceitarConvite(@PathVariable Long id_friendship)
+    @PostMapping(value = "/aceitar/{id_usuario}/{id_friendship}", produces = "application/json")
+    public ResponseEntity<?> aceitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship)
     {
+        Optional<Friendship> objeto = repository.findById(id_friendship);
+        if(objeto.isEmpty()) throw new IllegalStateException("Não existe solicitação pendente");
+
+        if(!objeto.get().getId_receiver().getId().equals(id_usuario))
+        {
+            throw new IllegalStateException("Usuario destinatario incorreto para aceitar.");
+        }
+
         repository.atualizarStatus(id_friendship,  FriendshipStatus.ACEITO.name());
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Solicitação aceita.");
-
     }
 
-    @PostMapping(value = "/recusar/{id_friendship}", produces = "application/json")
-    public ResponseEntity<?> rejeitarConvite(@PathVariable Long id_friendship)
+    @PostMapping(value = "/recusar/{id_usuario}/{id_friendship}", produces = "application/json")
+    public ResponseEntity<?> rejeitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship)
     {
+        Optional<Friendship> objeto = repository.findById(id_friendship);
+        if(objeto.isEmpty()) throw new IllegalStateException("Não existe solicitação pendente");
 
-        Optional<Friendship> jaExiste = repository.findById(id_friendship);
-
-        if(jaExiste.isEmpty()) throw new IllegalStateException("Não existe solicitação pendente");
-
+        if(!objeto.get().getId_receiver().getId().equals(id_usuario))
+        {
+            throw new IllegalStateException("Usuario destinatario incorreto pare recusar.");
+        }
+    
         repository.atualizarStatus(id_friendship,  FriendshipStatus.RECUSADO.name() );
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Solicitação recusada.");
@@ -88,10 +102,21 @@ public class FriendshipController {
 
     //Amigos online - CONSTRUIR
 
-    @GetMapping(value = "/amigos/{id_receiver}", produces = "application/json")
-    public ResponseEntity<List<?>>  listarAmigos(@PathVariable Long id_receiver)
+    @GetMapping("/amigos-online/{id_usuario}")
+    @Operation(summary = "Listar amigos online do usuário autenticado")
+    public ResponseEntity<List<UsuarioPublicDTO>> listarAmigosOnline(@PathVariable Long id_usuario)
     {
-        List<Friendship> objetos = (List<Friendship>) repository.findAceito(id_receiver);
+        Long id = usuarioRepository.findById(id_usuario).get().getId(); 
+
+        List<UsuarioPublicDTO> online = service.obterAmigosOnline(id);
+
+        return ResponseEntity.ok(online);
+    }
+
+    @GetMapping(value = "/amigos/{id_usuario}", produces = "application/json")
+    public ResponseEntity<List<?>>  listarAmigos(@PathVariable Long id_usuario)
+    {
+        List<Friendship> objetos = (List<Friendship>) repository.findAceito(id_usuario);
 
         if(objetos.isEmpty()) throw new IllegalStateException("Voce não tem amigos.");
     
