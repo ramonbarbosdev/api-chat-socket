@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
@@ -59,7 +60,7 @@ public class FriendshipController {
     public ResponseEntity<?> enviarConvite(@PathVariable Long id_requester, @PathVariable Long id_receiver)
     {
         service.enviarConvite(id_requester, id_receiver);
-       return ResponseEntity.status(HttpStatus.CREATED).body("Convite enviado.");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Convite enviado.");
     }
 
     @PostMapping(value = "/aceitar/{id_friendship}", produces = "application/json")
@@ -72,15 +73,29 @@ public class FriendshipController {
         return null;
     }
 
-    @GetMapping(value = "/", produces = "application/json")
-    public ResponseEntity<?> listarAmigos() {
-        return null;
+    //Amigos online - CONSTRUIR
+
+    @GetMapping(value = "/amigos/{id_receiver}", produces = "application/json")
+    public ResponseEntity<List<?>>  listarAmigos(@PathVariable Long id_receiver)
+    {
+        List<Friendship> objetos = (List<Friendship>) repository.findAceito(id_receiver);
+
+        if(objetos.isEmpty()) throw new IllegalStateException("Voce não tem amigos.");
+    
+        List<FriendshipDTO> objetoDTO = objetos.stream()
+            .map(objeto -> new FriendshipDTO(objeto)) 
+            .collect(Collectors.toList()); 
+
+        return new ResponseEntity<>(objetoDTO, HttpStatus.OK);
     }
 
-    @GetMapping(value = "/solicitacao/{id_receiver}", produces = "application/json")
-    public ResponseEntity<List<?>> listarConvitePendente(@PathVariable Long id_receiver)
+    @GetMapping(value = "/pendente/{id_receiver}", produces = "application/json")
+    public ResponseEntity<List<?>> listarPendente(@PathVariable Long id_receiver)
     {
         List<Friendship> objetos = (List<Friendship>) repository.findPendente(id_receiver);
+
+        if(objetos.isEmpty()) throw new IllegalStateException("Voce não solicitação de amizade.");
+
 
         List<FriendshipDTO> objetoDTO = objetos.stream()
 				.map(objeto -> new FriendshipDTO(objeto)) 
@@ -90,11 +105,11 @@ public class FriendshipController {
     }
 
     @DeleteMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> removerAmizade(@PathVariable Long id) {
+    public ResponseEntity<?> removerAmizade(@PathVariable Long id)
+    {
         return null;
     }
 
-    //Amigos online
 
     //Todos
 

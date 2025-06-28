@@ -27,10 +27,17 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
             """)
     boolean existeRelacionamento(@Param("u1") Usuario u1, @Param("u2") Usuario u2);
 
-       @Query("""
+    @Query("""
                 SELECT f  FROM Friendship f
                 WHERE f.id_receiver.id = :id_receiver
                 AND f.tp_status = 'PENDENTE'
             """)
     List<Friendship> findPendente(Long id_receiver);
+
+    @Query("""
+                SELECT f  FROM Friendship f
+                WHERE f.id_receiver.id = :id_receiver
+                AND f.tp_status = 'ACEITO'
+            """)
+    List<Friendship> findAceito(Long id_receiver);
 }
