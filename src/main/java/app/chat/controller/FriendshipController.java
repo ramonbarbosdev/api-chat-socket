@@ -65,15 +65,17 @@ public class FriendshipController {
     public ResponseEntity<?> enviarConvite(@PathVariable Long id_requester, @PathVariable Long id_receiver)
     {
         service.enviarConvite(id_requester, id_receiver);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Convite enviado.");
+        messagingTemplate.convertAndSend("/topic/amigos", "update");
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Convite enviado"));
     }
 
     @PostMapping(value = "/aceitar/{id_usuario}/{id_friendship}", produces = "application/json")
     public ResponseEntity<?> aceitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship)
     {
         Optional<Friendship> objeto = repository.findById(id_friendship);
-        if(objeto.isEmpty()) throw new IllegalStateException("Não existe solicitação pendente");
-
+        if(objeto.isEmpty()) return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Não existe solicitação pendente"));
+        if(objeto.get().getTp_status() == FriendshipStatus.ACEITO) return null;
+ 
         if(!objeto.get().getId_receiver().getId().equals(id_usuario))
         {
             throw new IllegalStateException("Usuario destinatario incorreto para aceitar.");
@@ -81,14 +83,18 @@ public class FriendshipController {
 
         repository.atualizarStatus(id_friendship,  FriendshipStatus.ACEITO.name());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Solicitação aceita.");
+        messagingTemplate.convertAndSend("/topic/amigos", "update");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Solicitação aceita."));
     }
 
     @PostMapping(value = "/recusar/{id_usuario}/{id_friendship}", produces = "application/json")
     public ResponseEntity<?> rejeitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship)
     {
         Optional<Friendship> objeto = repository.findById(id_friendship);
-        if(objeto.isEmpty()) throw new IllegalStateException("Não existe solicitação pendente");
+        if(objeto.isEmpty()) return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Não existe solicitação pendente"));
+        if(objeto.get().getTp_status() == FriendshipStatus.RECUSADO) return null;
+
 
         if(!objeto.get().getId_receiver().getId().equals(id_usuario))
         {
@@ -96,8 +102,10 @@ public class FriendshipController {
         }
     
         repository.atualizarStatus(id_friendship,  FriendshipStatus.RECUSADO.name() );
+        
+        messagingTemplate.convertAndSend("/topic/amigos", "update");
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Solicitação recusada.");
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Solicitação de amizade recusada"));
     }
 
     //Amigos online - CONSTRUIR
@@ -118,8 +126,6 @@ public class FriendshipController {
     {
         List<Friendship> objetos = (List<Friendship>) repository.findAceito(id_usuario);
 
-        if(objetos.isEmpty()) throw new IllegalStateException("Voce não tem amigos.");
-    
         List<FriendshipDTO> objetoDTO = objetos.stream()
             .map(objeto -> new FriendshipDTO(objeto)) 
             .collect(Collectors.toList()); 
@@ -132,8 +138,6 @@ public class FriendshipController {
     {
         List<Friendship> objetos = (List<Friendship>) repository.findPendente(id_receiver);
 
-        if(objetos.isEmpty()) throw new IllegalStateException("Voce não solicitação de amizade.");
-
 
         List<FriendshipDTO> objetoDTO = objetos.stream()
 				.map(objeto -> new FriendshipDTO(objeto)) 
@@ -145,7 +149,10 @@ public class FriendshipController {
     @DeleteMapping(value = "/{id}", produces = "application/json")
     public ResponseEntity<?> removerAmizade(@PathVariable Long id)
     {
-        return null;
+        repository.deleteById(id);
+        messagingTemplate.convertAndSend("/topic/amigos", "update");
+
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Solicitação recusada"));
     }
 
 
