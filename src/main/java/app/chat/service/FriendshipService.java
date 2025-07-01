@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import app.chat.config.websocket.PresenceTracker;
 import app.chat.dto.UsuarioPublicDTO;
 import app.chat.enums.FriendshipStatus;
 import app.chat.model.Friendship;
@@ -19,7 +18,6 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class FriendshipService {
 
-    private final PresenceTracker presenceTracker;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -27,9 +25,7 @@ public class FriendshipService {
     @Autowired
     private FriendshipRepository repository;
 
-    FriendshipService(PresenceTracker presenceTracker) {
-        this.presenceTracker = presenceTracker;
-    }
+   
 
     public void enviarConvite(Long id_requester, Long id_receiver) {
         if (id_requester.equals(id_receiver))
@@ -59,21 +55,21 @@ public class FriendshipService {
 
     }
 
-    public List<UsuarioPublicDTO> obterAmigosOnline(Long id_usuario) {
-        Usuario usuario = usuarioRepository.findById(id_usuario)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+//     public List<UsuarioPublicDTO> obterAmigosOnline(Long id_usuario) {
+//         Usuario usuario = usuarioRepository.findById(id_usuario)
+//                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
 
-        List<Friendship> amizades = repository.findByStatusAndRequesterOrReceiver(
-                FriendshipStatus.ACEITO, usuario);
+//         List<Friendship> amizades = repository.findByStatusAndRequesterOrReceiver(
+//                 FriendshipStatus.ACEITO, usuario);
 
-        Set<Usuario> amigos = amizades.stream()
-                .map(f -> f.getId_requester().equals(usuario) ? f.getId_receiver() : f.getId_requester())
-                .collect(Collectors.toSet());
+//         Set<Usuario> amigos = amizades.stream()
+//                 .map(f -> f.getId_requester().equals(usuario) ? f.getId_receiver() : f.getId_requester())
+//                 .collect(Collectors.toSet());
 
-        // Filtra só os online
-        return amigos.stream()
-                .filter(amigo -> presenceTracker.isOnline(amigo.getId()))
-                .map(UsuarioPublicDTO::new)
-                .toList();
-    }
+//         // Filtra só os online
+//         return amigos.stream()
+//                 .filter(amigo -> presenceTracker.isOnline(amigo.getId()))
+//                 .map(UsuarioPublicDTO::new)
+//                 .toList();
+//     }
 }
