@@ -110,16 +110,7 @@ public class FriendshipController {
 
     //Amigos online - CONSTRUIR
 
-    // @GetMapping("/amigos-online/{id_usuario}")
-    // @Operation(summary = "Listar amigos online do usuário autenticado")
-    // public ResponseEntity<List<UsuarioPublicDTO>> listarAmigosOnline(@PathVariable Long id_usuario)
-    // {
-    //     Long id = usuarioRepository.findById(id_usuario).get().getId(); 
 
-    //     List<UsuarioPublicDTO> online = service.obterAmigosOnline(id);
-
-    //     return ResponseEntity.ok(online);
-    // }
 
     @GetMapping(value = "/amigos/{id_usuario}", produces = "application/json")
     public ResponseEntity<List<?>>  listarAmigos(@PathVariable Long id_usuario)
