@@ -1,9 +1,11 @@
 package app.chat.controller;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,7 @@ import app.chat.repository.RoomRepository;
 import app.chat.repository.RoomUsuarioRepository;
 import app.chat.repository.UsuarioRepository;
 import app.chat.service.FriendshipService;
+import app.chat.service.PresenceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -60,28 +63,30 @@ public class FriendshipController {
     @Autowired
     private FriendshipService service;
 
+    @Autowired
+    private PresenceService presenceService;
+
     @PostMapping(value = "/convidar/{id_requester}/{id_receiver}", produces = "application/json")
-    @Operation(summary = "Enviar convites de amizade" )
-    public ResponseEntity<?> enviarConvite(@PathVariable Long id_requester, @PathVariable Long id_receiver)
-    {
+    @Operation(summary = "Enviar convites de amizade")
+    public ResponseEntity<?> enviarConvite(@PathVariable Long id_requester, @PathVariable Long id_receiver) {
         service.enviarConvite(id_requester, id_receiver);
         messagingTemplate.convertAndSend("/topic/amigos", "update");
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Convite enviado"));
     }
 
     @PostMapping(value = "/aceitar/{id_usuario}/{id_friendship}", produces = "application/json")
-    public ResponseEntity<?> aceitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship)
-    {
+    public ResponseEntity<?> aceitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship) {
         Optional<Friendship> objeto = repository.findById(id_friendship);
-        if(objeto.isEmpty()) return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Não existe solicitação pendente"));
-        if(objeto.get().getTp_status() == FriendshipStatus.ACEITO) return null;
- 
-        if(!objeto.get().getId_receiver().getId().equals(id_usuario))
-        {
+        if (objeto.isEmpty())
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Não existe solicitação pendente"));
+        if (objeto.get().getTp_status() == FriendshipStatus.ACEITO)
+            return null;
+
+        if (!objeto.get().getId_receiver().getId().equals(id_usuario)) {
             throw new IllegalStateException("Usuario destinatario incorreto para aceitar.");
         }
 
-        repository.atualizarStatus(id_friendship,  FriendshipStatus.ACEITO.name());
+        repository.atualizarStatus(id_friendship, FriendshipStatus.ACEITO.name());
 
         messagingTemplate.convertAndSend("/topic/amigos", "update");
 
@@ -89,69 +94,88 @@ public class FriendshipController {
     }
 
     @PostMapping(value = "/recusar/{id_usuario}/{id_friendship}", produces = "application/json")
-    public ResponseEntity<?> rejeitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship)
-    {
+    public ResponseEntity<?> rejeitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship) {
         Optional<Friendship> objeto = repository.findById(id_friendship);
-        if(objeto.isEmpty()) return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Não existe solicitação pendente"));
-        if(objeto.get().getTp_status() == FriendshipStatus.RECUSADO) return null;
+        if (objeto.isEmpty())
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Não existe solicitação pendente"));
+        if (objeto.get().getTp_status() == FriendshipStatus.RECUSADO)
+            return null;
 
-
-        if(!objeto.get().getId_receiver().getId().equals(id_usuario))
-        {
+        if (!objeto.get().getId_receiver().getId().equals(id_usuario)) {
             throw new IllegalStateException("Usuario destinatario incorreto pare recusar.");
         }
-    
-        repository.atualizarStatus(id_friendship,  FriendshipStatus.RECUSADO.name() );
-        
+
+        repository.atualizarStatus(id_friendship, FriendshipStatus.RECUSADO.name());
+
         messagingTemplate.convertAndSend("/topic/amigos", "update");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Solicitação de amizade recusada"));
     }
 
-    //Amigos online - CONSTRUIR
+    // Amigos online - CONSTRUIR
+    @GetMapping("/amigos-online/{id_usuario}")
+    public ResponseEntity<List<UsuarioPublicDTO>> listarUsuariosOnline(@PathVariable Long id_usuario) {
+        Set<Long> onlineIds = presenceService.getOnlineUserIds();
 
+        List<Friendship> amizades = repository.findAceito(id_usuario);
 
+        List<Usuario> amigos = new ArrayList<>();
+
+        for (Friendship f : amizades) {
+            Usuario amigo;
+
+            if (f.getId_requester().getId().equals(id_usuario)) {
+                amigo = f.getId_receiver();
+            } else {
+                amigo = f.getId_requester();
+            }
+
+            if (onlineIds.contains(amigo.getId())) {
+                amigos.add(amigo);
+            }
+
+        }
+        List<UsuarioPublicDTO> resultado = amigos.stream()
+                .map(UsuarioPublicDTO::new)
+                .toList();
+                
+
+        return ResponseEntity.ok(resultado);
+    }
 
     @GetMapping(value = "/amigos/{id_usuario}", produces = "application/json")
-    public ResponseEntity<List<?>>  listarAmigos(@PathVariable Long id_usuario)
-    {
+    public ResponseEntity<List<?>> listarAmigos(@PathVariable Long id_usuario) {
         List<Friendship> objetos = (List<Friendship>) repository.findAceito(id_usuario);
 
         List<FriendshipDTO> objetoDTO = objetos.stream()
-            .map(objeto -> new FriendshipDTO(objeto)) 
-            .collect(Collectors.toList()); 
+                .map(objeto -> new FriendshipDTO(objeto))
+                .collect(Collectors.toList());
 
         return new ResponseEntity<>(objetoDTO, HttpStatus.OK);
     }
 
     @GetMapping(value = "/pendente/{id_receiver}", produces = "application/json")
-    public ResponseEntity<List<?>> listarPendente(@PathVariable Long id_receiver)
-    {
+    public ResponseEntity<List<?>> listarPendente(@PathVariable Long id_receiver) {
         List<Friendship> objetos = (List<Friendship>) repository.findPendente(id_receiver);
 
-
         List<FriendshipDTO> objetoDTO = objetos.stream()
-				.map(objeto -> new FriendshipDTO(objeto)) 
-				.collect(Collectors.toList()); 
+                .map(objeto -> new FriendshipDTO(objeto))
+                .collect(Collectors.toList());
 
         return new ResponseEntity<>(objetoDTO, HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> removerAmizade(@PathVariable Long id)
-    {
+    public ResponseEntity<?> removerAmizade(@PathVariable Long id) {
         repository.deleteById(id);
         messagingTemplate.convertAndSend("/topic/amigos", "update");
 
         return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Solicitação recusada"));
     }
 
+    // Todos
 
-    //Todos
-
-    //pendente
-
-
+    // pendente
 
     // @MessageMapping("/invite")
     // public void inviteFriend(FriendshipRequest request, Principal principal) {

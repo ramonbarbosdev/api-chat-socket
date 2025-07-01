@@ -37,11 +37,11 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
 
     @Query("""
                 SELECT f  FROM Friendship f
-                WHERE f.id_receiver.id = :id_usuario
-                OR f.id_requester.id = :id_usuario
+                   WHERE (f.id_requester.id = :id_usuario OR f.id_receiver.id = :id_usuario)
                 AND f.tp_status = 'ACEITO'
             """)
     List<Friendship> findAceito(Long id_usuario);
+
 
     @Modifying
     @Transactional

@@ -12,6 +12,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import app.chat.security.JWTTokenAutenticacaoService;
+import app.chat.service.PresenceService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -22,6 +23,10 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
     private JWTTokenAutenticacaoService jwtTokenAutenticacaoService;
     @Autowired
     private JWTTokenAutenticacaoService autenticacaoService;
+    
+    @Autowired
+    private PresenceService presenceService;
+
 
     @Override
     public boolean beforeHandshake(
@@ -40,6 +45,8 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
                         String token = cookie.getValue();
                         Long userId = jwtTokenAutenticacaoService.decodeUserId(token);
                         attributes.put("userId", userId);
+                        System.out.println("Conectou: " + userId + " - Total online: " + presenceService.getOnlineUserIds().size());
+
 
                     }
                 }
@@ -53,6 +60,5 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
     public void afterHandshake(ServerHttpRequest arg0, ServerHttpResponse arg1, WebSocketHandler arg2,
             @Nullable Exception arg3) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'afterHandshake'");
     }
 }
