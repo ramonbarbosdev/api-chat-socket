@@ -35,7 +35,6 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
             """)
     List<Friendship> findPendente(Long id_receiver);
 
-
     @Query("""
                 SELECT f  FROM Friendship f
                    WHERE (f.id_requester.id = :id_usuario OR f.id_receiver.id = :id_usuario)
@@ -55,10 +54,10 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
     void atualizarStatus(Long id_friendship, String tp_status);
 
     @Query("""
-        SELECT f FROM Friendship f
-        WHERE f.tp_status = :status
-        AND (f.id_requester = :usuario OR f.id_receiver = :usuario)
-    """)
+                SELECT f FROM Friendship f
+                WHERE f.tp_status = :status
+                AND (f.id_requester = :usuario OR f.id_receiver = :usuario)
+            """)
     List<Friendship> findByStatusAndRequesterOrReceiver(
             @Param("status") FriendshipStatus status,
             @Param("usuario") Usuario usuario);

@@ -76,6 +76,7 @@ public class FriendshipController {
 
     @PostMapping(value = "/aceitar/{id_usuario}/{id_friendship}", produces = "application/json")
     public ResponseEntity<?> aceitarConvite(@PathVariable Long id_usuario, @PathVariable Long id_friendship) {
+       
         Optional<Friendship> objeto = repository.findById(id_friendship);
         if (objeto.isEmpty())
             return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Não existe solicitação pendente"));
@@ -112,7 +113,18 @@ public class FriendshipController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Solicitação de amizade recusada"));
     }
 
-    // Amigos online - CONSTRUIR
+    @GetMapping("/amigo-disponivel/{id_usuario}")
+    public ResponseEntity<List<UsuarioPublicDTO>> listarAmigoDisponivel(@PathVariable Long id_usuario) {
+
+        List<Usuario> lista = usuarioRepository.findUsuariosDisponiveisAmizade(id_usuario);
+       
+        List<UsuarioPublicDTO> resultado = lista.stream()
+                .map(UsuarioPublicDTO::new)
+                .toList();
+
+        return ResponseEntity.ok(resultado);
+    }
+
     @GetMapping("/amigos-online/{id_usuario}")
     public ResponseEntity<List<UsuarioPublicDTO>> listarUsuariosOnline(@PathVariable Long id_usuario) {
         Set<Long> onlineIds = presenceService.getOnlineUserIds();
@@ -138,7 +150,6 @@ public class FriendshipController {
         List<UsuarioPublicDTO> resultado = amigos.stream()
                 .map(UsuarioPublicDTO::new)
                 .toList();
-                
 
         return ResponseEntity.ok(resultado);
     }
