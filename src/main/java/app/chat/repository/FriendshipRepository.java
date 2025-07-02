@@ -35,6 +35,7 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Long> {
             """)
     List<Friendship> findPendente(Long id_receiver);
 
+
     @Query("""
                 SELECT f  FROM Friendship f
                    WHERE (f.id_requester.id = :id_usuario OR f.id_receiver.id = :id_usuario)

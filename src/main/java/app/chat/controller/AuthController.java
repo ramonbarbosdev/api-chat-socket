@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -45,6 +46,9 @@ public class AuthController {
     @Autowired
     private PresenceService presenceService;
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     @Operation(summary = "Autenticação de usuario", description = "Faz login com login e senha")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Autenticação aceita"),
@@ -60,10 +64,12 @@ public class AuthController {
         Usuario objeto = usuarioRepository.findUserByLogin(login);
         try {
             String token = jwtTokenAutenticacaoService.addAuthentication(response, auth.getName());
-            
+
             presenceService.userConnected(objeto.getId());
-            // System.out.println("Conectou: " + objeto.getId() + " - Total online: " + presenceService.getOnlineUserIds().size());
-            
+            // System.out.println("Conectou: " + objeto.getId() + " - Total online: " +
+            // presenceService.getOnlineUserIds().size());
+            messagingTemplate.convertAndSend("/topic/amigos", "update");
+
             return ResponseEntity
                     .ok()
                     .body(Map.of(
@@ -101,8 +107,6 @@ public class AuthController {
 
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
 
-        
-
         return new ResponseEntity<Usuario>(usuarioSalvo, HttpStatus.CREATED);
     }
 
@@ -112,7 +116,9 @@ public class AuthController {
             String username = authentication.getName();
             Usuario usuario = usuarioRepository.findUserByLogin(username);
             presenceService.userDisconnected(usuario.getId());
-            // System.out.println("Desconectado: " + usuario.getId() + " - Total online: " + presenceService.getOnlineUserIds().size());
+            // System.out.println("Desconectado: " + usuario.getId() + " - Total online: " +
+            // presenceService.getOnlineUserIds().size());
+            messagingTemplate.convertAndSend("/topic/amigos", "update");
 
             return ResponseEntity.ok(Map.of("message", "Logout realizado com sucesso."));
         }
