@@ -184,19 +184,5 @@ public class FriendshipController {
         return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Solicitação recusada"));
     }
 
-    // Todos
-
-    // pendente
-
-    // @MessageMapping("/invite")
-    // public void inviteFriend(FriendshipRequest request, Principal principal) {
-    // // lógica de salvar amizade com status PENDING
-
-    // messagingTemplate.convertAndSendToUser(
-    // request.getReceiverUsername(),
-    // "/queue/friendship"
-    // // new NotificationDTO("Novo convite de amizade de " + principal.getName())
-    // );
-    // }
 
 }

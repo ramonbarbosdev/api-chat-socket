@@ -66,16 +66,24 @@ public class RoomController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Requisição feita com sucesso"),
     })
-    @GetMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> obterTodosId(@PathVariable Long id) {
-        Optional<Room> objeto = repository.findById(id);
+    @GetMapping(value = "/{id_room}/{id_usuario}", produces = "application/json")
+    public ResponseEntity<?> obterInformacaoSala(@PathVariable Long id_room, @PathVariable Long id_usuario) {
+
+        Optional<Room> objeto = repository.findById(id_room);
+
         if (objeto.isPresent()) {
 
-            Optional<Usuario> usuario = usuarioRepository.findById(objeto.get().getId_usuario());
+            Optional<Usuario> usuario = usuarioRepository.findById(id_usuario);
+            RoomUsuario roomUsuario = roomUsuarioRepository.findUsuariosByidUsuario(id_usuario, id_room);
 
             RoomDTO roomDTO = new RoomDTO();
-            roomDTO.setId_room(id);
-            roomDTO.setNm_room(objeto.get().getNm_room());
+            roomDTO.setId_room(id_room);
+        
+            roomDTO.setNm_room(
+                    objeto.get().getId_usuario() == null
+                            ? roomUsuario.getNm_roomperson()
+                            : objeto.get().getNm_room());
+                            
             roomDTO.setDs_room(objeto.get().getDs_room());
             roomDTO.setId_usuario(objeto.get().getId_usuario());
             roomDTO.setNm_usuario(usuario.get().getNome());
@@ -93,15 +101,6 @@ public class RoomController {
 
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
-
-    // @GetMapping("/compartilhamento/{id_usuario}")
-    // public ResponseEntity<?> obterUsuarioParaCompartilhamento( @PathVariable Long
-    // id_usuario) {
-
-    // List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
-
-    // return new ResponseEntity<>(list, HttpStatus.OK);
-    // }
 
     @GetMapping("/varificar-responsavel/{id_usuario}/{id_room}")
     public ResponseEntity<?> verificarResponsavelSala(@PathVariable Long id_usuario, @PathVariable Long id_room) {
@@ -142,6 +141,52 @@ public class RoomController {
         messagingTemplate.convertAndSend("/topic/salas", "update");
 
         return new ResponseEntity<>(objetoSalvo, HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Criação sala individual", description = "")
+    @ApiResponses(value = {
+    // @ApiResponse(responseCode = "401", description = "Não autorizado")
+    })
+    @PostMapping(value = "/individual/{id_usuario}/{id_amigo}", produces = "application/json")
+    public ResponseEntity<?> cadastroIndividual(@PathVariable Long id_usuario, @PathVariable Long id_amigo) {
+
+        Usuario usuario = usuarioRepository.findById(id_usuario).orElseThrow();
+        Usuario amigo = usuarioRepository.findById(id_amigo).orElseThrow();
+
+        String nomeSala = gerarNomeSala(id_usuario, id_amigo);
+
+        Optional<Room> salaOptional = repository.findByNome(nomeSala);
+        Room sala;
+        if (salaOptional.isPresent()) {
+            sala = salaOptional.get();
+        } else {
+            Room nova = new Room();
+            nova.setNm_room(nomeSala);
+            sala = repository.save(nova);
+        }
+        System.out.println(usuario.getNome());
+        System.out.println(amigo.getNome());
+
+        criarRoomUsuario(sala, usuario, amigo.getNome());
+        criarRoomUsuario(sala, amigo, usuario.getNome());
+
+        // messagingTemplate.convertAndSend("/topic/salas", "update");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(sala);
+    }
+
+    public String gerarNomeSala(Long id1, Long id2) {
+        return "sala_" + Math.min(id1, id2) + "_" + Math.max(id1, id2);
+    }
+
+    private void criarRoomUsuario(Room sala, Usuario usuario, String nomeExibido) {
+        if (!roomUsuarioRepository.existsByRoomAndUsuario(sala, usuario)) {
+            RoomUsuario ru = new RoomUsuario();
+            ru.setRoom(sala);
+            ru.setUsuario(usuario);
+            ru.setNm_roomperson(nomeExibido);
+            roomUsuarioRepository.save(ru);
+        }
     }
 
     @Operation(summary = "Exclusão", description = "")
