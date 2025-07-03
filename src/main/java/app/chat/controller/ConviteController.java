@@ -1,6 +1,7 @@
 package app.chat.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,7 @@ public class ConviteController {
 
         messagingTemplate.convertAndSend("/topic/salas", "update");
 
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Convite enviado com sucesso!"));
 
-        return ResponseEntity.ok().build();
     }
 }

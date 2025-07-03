@@ -103,8 +103,7 @@ public class RoomController {
         List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
         List<RoomDTO> dtos = new ArrayList<>();
 
-        for(Room objeto: list)
-        {   
+        for (Room objeto : list) {
             RoomUsuario roomUsuario = roomUsuarioRepository.findUsuariosByidUsuario(id_usuario, objeto.getId_room());
 
             RoomDTO roomDTO = new RoomDTO();
@@ -114,12 +113,12 @@ public class RoomController {
                             ? roomUsuario.getNm_roomperson()
                             : objeto.getNm_room());
 
-                             roomDTO.setDs_room(objeto.getDs_room());
+            roomDTO.setDs_room(objeto.getDs_room());
             roomDTO.setId_usuario(objeto.getId_usuario());
             // roomDTO.setNm_usuario(usuario.get().getNome());
             dtos.add(roomDTO);
         }
-            
+
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
@@ -183,9 +182,10 @@ public class RoomController {
         criarRoomUsuario(sala, usuario, amigo.getNome());
         criarRoomUsuario(sala, amigo, usuario.getNome());
 
-        // messagingTemplate.convertAndSend("/topic/salas", "update");
+        messagingTemplate.convertAndSend("/topic/salas", "update");
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(sala);
+        return new ResponseEntity<>(Map.of("message", "Gerando bate-papo", "room", sala), HttpStatus.OK);
+
     }
 
     public String gerarNomeSala(Long id1, Long id2) {
@@ -217,7 +217,7 @@ public class RoomController {
         }
 
         messagingTemplate.convertAndSend("/topic/salas", "update");
-
+        messagingTemplate.convertAndSend("/topic/salas/delete", id_room);
 
         return new ResponseEntity<>(Map.of("message", "Usuario Removido"), HttpStatus.OK);
     }
@@ -233,7 +233,7 @@ public class RoomController {
         roomUsuarioRepository.deleteByIdRoomUsuario(id_room);
         repository.deleteById(id_room);
 
-        messagingTemplate.convertAndSend("/topic/salas", "update");
+        messagingTemplate.convertAndSend("/topic/salas/delete", id_room);
 
         return ResponseEntity.status(HttpStatus.OK).body("{\"message\": \"Registro deletado!\"}");
 
