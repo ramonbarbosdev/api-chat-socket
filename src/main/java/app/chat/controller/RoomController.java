@@ -1,8 +1,10 @@
 package app.chat.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.chat.dto.RoomDTO;
+import app.chat.dto.UsuarioDTO;
 import app.chat.dto.authDTO.AuthLoginDTO;
 import app.chat.model.Room;
 import app.chat.model.RoomUsuario;
@@ -98,8 +101,26 @@ public class RoomController {
     public ResponseEntity<?> obterSalasPermitidas(@PathVariable Long id_usuario) {
 
         List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
+        List<RoomDTO> dtos = new ArrayList<>();
 
-        return new ResponseEntity<>(list, HttpStatus.OK);
+        for(Room objeto: list)
+        {   
+            RoomUsuario roomUsuario = roomUsuarioRepository.findUsuariosByidUsuario(id_usuario, objeto.getId_room());
+
+            RoomDTO roomDTO = new RoomDTO();
+            roomDTO.setId_room(objeto.getId_room());
+            roomDTO.setNm_room(
+                    objeto.getId_usuario() == null
+                            ? roomUsuario.getNm_roomperson()
+                            : objeto.getNm_room());
+
+                             roomDTO.setDs_room(objeto.getDs_room());
+            roomDTO.setId_usuario(objeto.getId_usuario());
+            // roomDTO.setNm_usuario(usuario.get().getNome());
+            dtos.add(roomDTO);
+        }
+            
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
 
     @GetMapping("/varificar-responsavel/{id_usuario}/{id_room}")
