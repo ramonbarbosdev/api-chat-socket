@@ -1,5 +1,6 @@
 package app.chat.security;
 
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import app.chat.service.ImplementacaoUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 
+
 @Configuration
 @EnableWebSecurity
 public class WebConfigSecurity {
@@ -34,10 +36,7 @@ public class WebConfigSecurity {
     @Autowired
     private ImplementacaoUserDetailsService implementacaoUserDetailsService;
 
-    // TODO: ATUALIZE ESTA LISTA COM OS IPs MAIS RECENTES DO UPTIMEROBOT
-    // Acesse https://uptimerobot.com/inc/files/ips/IPv4.txt e https://uptimerobot.com/inc/files/ips/IPv4andIPv6.txt
-    // para a lista completa e mais recente.
-    private static final List<String> UPTIMEROBOT_IPS = Arrays.asList(
+      private static final List<String> UPTIMEROBOT_IPS = Arrays.asList(
         "104.131.107.63", "122.248.234.23", "128.140.106.114", "128.140.41.193",
         "128.199.195.156", "135.181.154.9", "138.197.150.151", "139.59.173.249",
         "142.132.180.39", "146.185.143.14", "157.90.155.240", "157.90.156.63",
@@ -57,34 +56,20 @@ public class WebConfigSecurity {
         "78.47.98.55", "88.99.80.227"
     );
 
-    // List of IpAddressMatchers compiled once for efficiency
-    private final List<IpAddressMatcher> uptimeRobotIpMatchers = UPTIMEROBOT_IPS.stream()
-        .map(IpAddressMatcher::new)
-        .collect(Collectors.toList());
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
-
-        return http
+      
+    	return http  
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable())  
             .authorizeHttpRequests(auth -> auth
-                    // Permite acesso irrestrito ao endpoint de status se o IP for do UptimeRobot
-                    // Esta regra deve vir ANTES de qualquer regra de autenticação geral
-                    .requestMatchers(request -> {
-                        // Verifica se a requisição é para o endpoint de status E se o IP de origem é do UptimeRobot
-                        return request.getMethod().equals("GET") &&
-                                (new AntPathRequestMatcher("/status/")).matches(request) &&
-                                uptimeRobotIpMatchers.stream().anyMatch(matcher -> matcher.matches(request.getRemoteAddr()));
-                    }).permitAll()
-                    // Permite acesso ao status para qualquer um (como fallback ou para outros clientes)
-                    .requestMatchers(HttpMethod.GET, "/status/").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
-                    .requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
-                    .requestMatchers(HttpMethod.OPTIONS,"/index").permitAll()
-                    .requestMatchers(HttpMethod.OPTIONS,"/chat-socket/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/auth/login").permitAll() 
+                    .requestMatchers(HttpMethod.POST, "/auth/register").permitAll() 
+                    .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll() 
+                    .requestMatchers(HttpMethod.GET, "/status/").permitAll() 
+            		.requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
+            		.requestMatchers(HttpMethod.OPTIONS,"/index").permitAll()
+            		.requestMatchers(HttpMethod.OPTIONS,"/chat-socket/**").permitAll()
                     .requestMatchers(
                         new AntPathRequestMatcher("/swagger-ui/**"),
                         new AntPathRequestMatcher("/v3/api-docs/**"),
@@ -92,10 +77,12 @@ public class WebConfigSecurity {
                         new AntPathRequestMatcher("/swagger-resources/**"),
                         new AntPathRequestMatcher("/webjars/**")
                     ).permitAll()
-                    .anyRequest().authenticated()
+                    .anyRequest().authenticated() 
             )
             .addFilterBefore(new JwtApiAutenticacaoFilter(), UsernamePasswordAuthenticationFilter.class)
-            .build();
+            // .addFilterBefore(new JWTLoginFilter("/login", authenticationManager), UsernamePasswordAuthenticationFilter.class)
+            .build();  
+
     }
 
     @Bean
@@ -111,31 +98,29 @@ public class WebConfigSecurity {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://api-chat-socket.onrender.com","https://chat-socket-jca8.onrender.com"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://api-chat-socket.onrender.com","https://chat-socket-jca8.onrender.com")); // Libera o Angular
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(true); 
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
-    // O WebSecurityCustomizer não é mais estritamente necessário para o problema do UptimeRobot
-    // se a regra específica no SecurityFilterChain for suficiente.
-    // Você pode mantê-lo se tiver outras necessidades de ignorar a segurança.
-    // Se optar por removê-lo, remova também as importações de IpAddressMatcher e RequestMatcher.
-    @Bean
+     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-            .requestMatchers(new RequestMatcher() {
-                @Override
-                public boolean matches(HttpServletRequest request) {
-                    // Esta regra continua ignorando a segurança para QUALQUER requisição vinda dos IPs do UptimeRobot
-                    // Pode ser redundante ou não dependendo do seu caso de uso específico,
-                    // mas é uma forma segura de garantir que eles não sejam bloqueados.
-                    return uptimeRobotIpMatchers.stream().anyMatch(matcher -> matcher.matches(request.getRemoteAddr()));
-                }
-            });
+        return (web) -> web.ignoring().requestMatchers(new RequestMatcher() {
+            // Cria uma lista de IpAddressMatcher para cada IP/CIDR fornecido
+            private final List<IpAddressMatcher> ipMatchers = UPTIMEROBOT_IPS.stream()
+                .map(IpAddressMatcher::new)
+                .collect(Collectors.toList());
+
+            @Override
+            public boolean matches(HttpServletRequest request) {
+                // Verifica se o IP remoto da requisição corresponde a algum dos IPs do UptimeRobot
+                return ipMatchers.stream().anyMatch(matcher -> matcher.matches(request));
+            }
+        });
     }
 }
