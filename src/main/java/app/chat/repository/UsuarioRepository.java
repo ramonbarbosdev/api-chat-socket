@@ -33,6 +33,7 @@ public interface  UsuarioRepository extends CrudRepository<Usuario, Long>  {
 			FROM RoomUsuario ru
 			WHERE ru.room.id_room = :id_room
 		)
+		
 	""")
 	List<Usuario> findUsuarioDisponivelConvite(@Param("id_room") Long id_room, @Param("id_usuario") Long id_usuario);
 
