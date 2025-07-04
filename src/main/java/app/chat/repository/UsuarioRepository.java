@@ -25,28 +25,42 @@ public interface UsuarioRepository extends CrudRepository<Usuario, Long> {
 	void atualizarTokenUser(String token, String login);
 
 	@Query("""
-		SELECT u
-		FROM Usuario u
-		WHERE u.id <> :id_usuario
-		AND u.id NOT IN (
-			SELECT ru.usuario.id
-			FROM RoomUsuario ru
-			WHERE ru.room.id_room = :id_room
-		)
-	""")
+			    SELECT u
+			    FROM Usuario u
+			    WHERE u.id <> :id_usuario
+			      AND u.id NOT IN (
+			        SELECT ru.usuario.id
+			        FROM RoomUsuario ru
+			        WHERE ru.room.id_room = :id_room
+			      )
+			      AND (
+			        u.id IN (
+			          SELECT f.id_receiver.id
+			          FROM Friendship f
+			          WHERE f.id_requester.id = :id_usuario AND f.tp_status = 'ACEITO'
+			        )
+			        OR
+			        u.id IN (
+			          SELECT f.id_requester.id
+			          FROM Friendship f
+			          WHERE f.id_receiver.id = :id_usuario AND f.tp_status = 'ACEITO'
+			        )
+			      )
+			""")
 	List<Usuario> findUsuarioDisponivelConvite(@Param("id_room") Long id_room, @Param("id_usuario") Long id_usuario);
 
 	@Query("""
-			    SELECT u FROM Usuario u
-			    WHERE u.id <> :id_usuario
-			      AND NOT EXISTS (
-			        SELECT 1
-			        FROM Friendship f
-			        WHERE
-			          (f.id_requester.id = :id_usuario AND f.id_receiver.id = u.id)
-			          OR
-			          (f.id_receiver.id = :id_usuario AND f.id_requester.id = u.id)
-			      )
+					    SELECT u FROM Usuario u
+					    WHERE u.id <> :id_usuario
+					      AND NOT EXISTS (
+					        SELECT 1
+					        FROM Friendship f
+					        WHERE
+					          (f.id_requester.id = :id_usuario AND f.id_receiver.id = u.id)
+					          OR
+					          (f.id_receiver.id = :id_usuario AND f.id_requester.id = u.id)
+					      )
 			""")
 	List<Usuario> findUsuariosDisponiveisAmizade(@Param("id_usuario") Long id_usuario);
+
 }

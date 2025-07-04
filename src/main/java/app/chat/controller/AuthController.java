@@ -89,14 +89,17 @@ public class AuthController {
             @ApiResponse(responseCode = "409", description = "Usuario ja existe")
     })
     @PostMapping(value = "/register", produces = "application/json")
-    public ResponseEntity register(@RequestBody AuthRegisterDTO obj) {
+    public ResponseEntity register(@RequestBody AuthRegisterDTO obj)
+    {
         String login = obj.getLogin();
         String nome = obj.getNome();
         String senha = obj.getSenha();
 
-        if (usuarioRepository.findUserByLogin(login) != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Usuário já existe!"));
-        }
+        if(login.isEmpty() ) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "O Login não pode ser vazio!"));
+        if( nome.isEmpty() ) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "O Nome não pode ser vazio!"));
+        if( senha.isEmpty()) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "A Senha não pode ser vazio!"));
+
+        if (usuarioRepository.findUserByLogin(login) != null) return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Usuário já existe!"));
 
         String senhaCriptografada = new BCryptPasswordEncoder().encode(senha);
 
