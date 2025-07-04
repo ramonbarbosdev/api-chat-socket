@@ -40,6 +40,7 @@ public class WebConfigSecurity {
                     .requestMatchers(HttpMethod.POST, "/auth/login").permitAll() 
                     .requestMatchers(HttpMethod.POST, "/auth/register").permitAll() 
                     .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll() 
+                    .requestMatchers(HttpMethod.POST, "/status/").permitAll() 
             		.requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
             		.requestMatchers(HttpMethod.OPTIONS,"/index").permitAll()
             		.requestMatchers(HttpMethod.OPTIONS,"/chat-socket/**").permitAll()
