@@ -39,6 +39,7 @@ public class WebConfigSecurity {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(HttpMethod.POST, "/auth/login").permitAll() 
                     .requestMatchers(HttpMethod.POST, "/auth/register").permitAll() 
+                    .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll() 
             		.requestMatchers(HttpMethod.OPTIONS,"/**").permitAll()
             		.requestMatchers(HttpMethod.OPTIONS,"/index").permitAll()
             		.requestMatchers(HttpMethod.OPTIONS,"/chat-socket/**").permitAll()
@@ -50,11 +51,6 @@ public class WebConfigSecurity {
                         new AntPathRequestMatcher("/webjars/**")
                     ).permitAll()
                     .anyRequest().authenticated() 
-            )
-            .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))  
-                .logoutSuccessUrl("/index")  
-                .permitAll()
             )
             .addFilterBefore(new JwtApiAutenticacaoFilter(), UsernamePasswordAuthenticationFilter.class)
             // .addFilterBefore(new JWTLoginFilter("/login", authenticationManager), UsernamePasswordAuthenticationFilter.class)
@@ -75,7 +71,7 @@ public class WebConfigSecurity {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:3000", "https://syncdb-mfa3.onrender.com")); // Libera o Angular
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://api-chat-socket.onrender.com","https://chat-socket-jca8.onrender.com")); // Libera o Angular
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true); 

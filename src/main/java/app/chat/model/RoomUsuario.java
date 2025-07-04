@@ -23,6 +23,9 @@ public class RoomUsuario {
     @JsonIgnore
     private Room room;
 
+    private String nm_roomperson;
+
+
     // Getters e Setters
     public Long getId_roomusuario() {
         return id_roomusuario;
@@ -46,5 +49,12 @@ public class RoomUsuario {
 
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
+    }
+
+    public String getNm_roomperson() {
+        return nm_roomperson;
+    }
+    public void setNm_roomperson(String nm_roomperson) {
+        this.nm_roomperson = nm_roomperson;
     }
 }

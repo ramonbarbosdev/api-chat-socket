@@ -13,12 +13,12 @@ import jakarta.transaction.Transactional;
 
 @Repository
 @Transactional
-public interface  UsuarioRepository extends CrudRepository<Usuario, Long>  {
+public interface UsuarioRepository extends CrudRepository<Usuario, Long> {
 
-	//consultar usuario por login
+	// consultar usuario por login
 	@Query("select u from Usuario u where u.login = ?1")
 	Usuario findUserByLogin(String login);
-	
+
 	@org.springframework.transaction.annotation.Transactional
 	@Modifying
 	@Query(nativeQuery = true, value = "update usuario set token = ?1 where login = ?2")
@@ -33,9 +33,20 @@ public interface  UsuarioRepository extends CrudRepository<Usuario, Long>  {
 			FROM RoomUsuario ru
 			WHERE ru.room.id_room = :id_room
 		)
-		
 	""")
 	List<Usuario> findUsuarioDisponivelConvite(@Param("id_room") Long id_room, @Param("id_usuario") Long id_usuario);
 
-	
+	@Query("""
+			    SELECT u FROM Usuario u
+			    WHERE u.id <> :id_usuario
+			      AND NOT EXISTS (
+			        SELECT 1
+			        FROM Friendship f
+			        WHERE
+			          (f.id_requester.id = :id_usuario AND f.id_receiver.id = u.id)
+			          OR
+			          (f.id_receiver.id = :id_usuario AND f.id_requester.id = u.id)
+			      )
+			""")
+	List<Usuario> findUsuariosDisponiveisAmizade(@Param("id_usuario") Long id_usuario);
 }

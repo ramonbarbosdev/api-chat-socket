@@ -22,7 +22,7 @@ public class Room {
     private Long id_room;
 
     @NotBlank(message = "O nome é obrigatorio!")
-	@Column(unique = false, nullable = false)
+    @Column(unique = false, nullable = false)
     private String nm_room;
 
     private String ds_room;
@@ -32,44 +32,57 @@ public class Room {
     private Usuario usuario;
 
     @Column(name = "id_usuario")
-	private Long id_usuario;
-
+    private Long id_usuario;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoomUsuario> compartilhamentos = new ArrayList<>();
 
+  
     public List<RoomUsuario> getCompartilhamentos() {
         return compartilhamentos;
     }
 
     public void setCompartilhamentos(List<RoomUsuario> compartilhamentos) {
         this.compartilhamentos = compartilhamentos;
-}
+    }
 
     public String getDs_room() {
         return ds_room;
     }
+
     public void setDs_room(String ds_room) {
         this.ds_room = ds_room;
     }
+
     public Long getId_room() {
         return id_room;
     }
+
     public void setId_room(Long id_room) {
         this.id_room = id_room;
     }
+
     public Long getId_usuario() {
         return id_usuario;
     }
+
     public void setId_usuario(Long id_usuario) {
         this.id_usuario = id_usuario;
     }
+
     public String getNm_room() {
         return nm_room;
     }
+
     public void setNm_room(String nm_room) {
         this.nm_room = nm_room;
     }
-  
+
+    public Room orElseGet(Object object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'orElseGet'");
+    }
+
+
 
 }

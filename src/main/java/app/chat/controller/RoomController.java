@@ -1,8 +1,10 @@
 package app.chat.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.chat.dto.RoomDTO;
+import app.chat.dto.UsuarioDTO;
 import app.chat.dto.authDTO.AuthLoginDTO;
 import app.chat.model.Room;
 import app.chat.model.RoomUsuario;
@@ -66,16 +69,24 @@ public class RoomController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Requisição feita com sucesso"),
     })
-    @GetMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> obterTodosId(@PathVariable Long id) {
-        Optional<Room> objeto = repository.findById(id);
+    @GetMapping(value = "/{id_room}/{id_usuario}", produces = "application/json")
+    public ResponseEntity<?> obterInformacaoSala(@PathVariable Long id_room, @PathVariable Long id_usuario) {
+
+        Optional<Room> objeto = repository.findById(id_room);
+
         if (objeto.isPresent()) {
 
-            Optional<Usuario> usuario = usuarioRepository.findById(objeto.get().getId_usuario());
+            Optional<Usuario> usuario = usuarioRepository.findById(id_usuario);
+            RoomUsuario roomUsuario = roomUsuarioRepository.findUsuariosByidUsuario(id_usuario, id_room);
 
             RoomDTO roomDTO = new RoomDTO();
-            roomDTO.setId_room(id);
-            roomDTO.setNm_room(objeto.get().getNm_room());
+            roomDTO.setId_room(id_room);
+
+            roomDTO.setNm_room(
+                    objeto.get().getId_usuario() == null
+                            ? roomUsuario.getNm_roomperson()
+                            : objeto.get().getNm_room());
+
             roomDTO.setDs_room(objeto.get().getDs_room());
             roomDTO.setId_usuario(objeto.get().getId_usuario());
             roomDTO.setNm_usuario(usuario.get().getNome());
@@ -90,18 +101,26 @@ public class RoomController {
     public ResponseEntity<?> obterSalasPermitidas(@PathVariable Long id_usuario) {
 
         List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
+        List<RoomDTO> dtos = new ArrayList<>();
 
-        return new ResponseEntity<>(list, HttpStatus.OK);
+        for (Room objeto : list) {
+            RoomUsuario roomUsuario = roomUsuarioRepository.findUsuariosByidUsuario(id_usuario, objeto.getId_room());
+
+            RoomDTO roomDTO = new RoomDTO();
+            roomDTO.setId_room(objeto.getId_room());
+            roomDTO.setNm_room(
+                    objeto.getId_usuario() == null
+                            ? roomUsuario.getNm_roomperson()
+                            : objeto.getNm_room());
+
+            roomDTO.setDs_room(objeto.getDs_room());
+            roomDTO.setId_usuario(objeto.getId_usuario());
+            // roomDTO.setNm_usuario(usuario.get().getNome());
+            dtos.add(roomDTO);
+        }
+
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
-
-    // @GetMapping("/compartilhamento/{id_usuario}")
-    // public ResponseEntity<?> obterUsuarioParaCompartilhamento( @PathVariable Long
-    // id_usuario) {
-
-    // List<Room> list = repository.findSalasCompartilhadasComUsuario(id_usuario);
-
-    // return new ResponseEntity<>(list, HttpStatus.OK);
-    // }
 
     @GetMapping("/varificar-responsavel/{id_usuario}/{id_room}")
     public ResponseEntity<?> verificarResponsavelSala(@PathVariable Long id_usuario, @PathVariable Long id_room) {
@@ -113,14 +132,6 @@ public class RoomController {
         }
 
         return new ResponseEntity<>(Map.of("fl_responsavel", false), HttpStatus.OK);
-    }
-
-    @DeleteMapping(value = "/remover-sala/{id_usuario}/{id_room}")
-    public ResponseEntity<?> removerUsuarioSala(@PathVariable Long id_usuario, @PathVariable Long id_room) {
-
-        roomUsuarioRepository.deleteByIdRoomIdUsuario(id_usuario, id_room);
-
-        return new ResponseEntity<>(Map.of("message", "Usuario Removido"), HttpStatus.OK);
     }
 
     @Operation(summary = "Criação", description = "")
@@ -139,20 +150,90 @@ public class RoomController {
         salaAssociada.setUsuario(usuario.get());
         roomUsuarioRepository.save(salaAssociada);
 
+        messagingTemplate.convertAndSend("/topic/salas", "update");
+
         return new ResponseEntity<>(objetoSalvo, HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Criação sala individual", description = "")
+    @ApiResponses(value = {
+    // @ApiResponse(responseCode = "401", description = "Não autorizado")
+    })
+    @PostMapping(value = "/individual/{id_usuario}/{id_amigo}", produces = "application/json")
+    public ResponseEntity<?> cadastroIndividual(@PathVariable Long id_usuario, @PathVariable Long id_amigo) {
+
+        Usuario usuario = usuarioRepository.findById(id_usuario).orElseThrow();
+        Usuario amigo = usuarioRepository.findById(id_amigo).orElseThrow();
+
+        String nomeSala = gerarNomeSala(id_usuario, id_amigo);
+
+        Optional<Room> salaOptional = repository.findByNome(nomeSala);
+        Room sala;
+        if (salaOptional.isPresent()) {
+            sala = salaOptional.get();
+        } else {
+            Room nova = new Room();
+            nova.setNm_room(nomeSala);
+            sala = repository.save(nova);
+        }
+        System.out.println(usuario.getNome());
+        System.out.println(amigo.getNome());
+
+        criarRoomUsuario(sala, usuario, amigo.getNome());
+        criarRoomUsuario(sala, amigo, usuario.getNome());
+
+        messagingTemplate.convertAndSend("/topic/salas", "update");
+
+        return new ResponseEntity<>(Map.of("message", "Gerando bate-papo", "room", sala), HttpStatus.OK);
+
+    }
+
+    public String gerarNomeSala(Long id1, Long id2) {
+        return "sala_" + Math.min(id1, id2) + "_" + Math.max(id1, id2);
+    }
+
+    private void criarRoomUsuario(Room sala, Usuario usuario, String nomeExibido) {
+        if (!roomUsuarioRepository.existsByRoomAndUsuario(sala, usuario)) {
+            RoomUsuario ru = new RoomUsuario();
+            ru.setRoom(sala);
+            ru.setUsuario(usuario);
+            ru.setNm_roomperson(nomeExibido);
+            roomUsuarioRepository.save(ru);
+        }
+    }
+
+    @DeleteMapping(value = "/remover-sala/{id_usuario}/{id_room}")
+    public ResponseEntity<?> removerUsuarioSala(@PathVariable Long id_usuario, @PathVariable Long id_room) {
+
+        Optional<Room> objeto = repository.findById(id_room);
+
+        if (objeto.get().getId_usuario() != null) {
+            roomUsuarioRepository.deleteByIdRoomIdUsuario(id_usuario, id_room);
+
+        } else {
+            chatMessageRepository.deleteByIdChatMessage(id_room);
+            roomUsuarioRepository.deleteByIdRoomUsuario(id_room);
+            repository.deleteById(id_room);
+        }
+
+        messagingTemplate.convertAndSend("/topic/salas", "update");
+        messagingTemplate.convertAndSend("/topic/salas/delete", id_room);
+
+        return new ResponseEntity<>(Map.of("message", "Usuario Removido"), HttpStatus.OK);
     }
 
     @Operation(summary = "Exclusão", description = "")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tudo certo")
     })
-    @DeleteMapping(value = "/{id}", produces = "application/text")
-    public ResponseEntity<?> delete(@PathVariable("id") Long id) throws Exception {
-        chatMessageRepository.deleteByIdChatMessage(id);
-        roomUsuarioRepository.deleteByIdRoomUsuario(id);
-        repository.deleteById(id);
+    @DeleteMapping(value = "/{id_room}", produces = "application/text")
+    public ResponseEntity<?> delete(@PathVariable("id_room") Long id_room) throws Exception {
 
-        messagingTemplate.convertAndSend("/topic/salas", "update");
+        chatMessageRepository.deleteByIdChatMessage(id_room);
+        roomUsuarioRepository.deleteByIdRoomUsuario(id_room);
+        repository.deleteById(id_room);
+
+        messagingTemplate.convertAndSend("/topic/salas/delete", id_room);
 
         return ResponseEntity.status(HttpStatus.OK).body("{\"message\": \"Registro deletado!\"}");
 
